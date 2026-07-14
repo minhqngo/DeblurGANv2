@@ -1,0 +1,67 @@
+# DeblurGAN-v2 example config (GoPro-style layout, relative paths).
+#
+# The generator backbone is any timm model name; channels are inferred automatically,
+# so `generator.backbone: resnet50` (or efficientnet_b0, densenet121, ...) just works.
+
+experiment: fpn_mobilenet_gopro
+
+data:
+  train:
+    blur_glob: data/gopro/train/**/blur/*.png
+    sharp_glob: data/gopro/train/**/sharp/*.png
+    size: 256
+    crop: random
+    scope: geometric
+    corrupt:
+      - {name: cutout, prob: 0.5, params: {num_holes_range: [1, 3], hole_height_range: [10, 25], hole_width_range: [10, 25]}}
+      - {name: jpeg, prob: 0.5, params: {quality_range: [70, 90]}}
+      - {name: motion_blur, prob: 0.5}
+      - {name: median_blur, prob: 0.5}
+      - {name: gamma, prob: 0.5}
+      - {name: rgb_shift, prob: 0.5}
+      - {name: hsv_shift, prob: 0.5}
+      - {name: sharpen, prob: 0.5}
+  val:
+    blur_glob: data/gopro/test/**/blur/*.png
+    sharp_glob: data/gopro/test/**/sharp/*.png
+    size: 256
+    crop: center
+    scope: none
+    corrupt: []
+  batch_size: 8
+  val_batch_size: 1
+  num_workers: 4
+
+generator:
+  backbone: mobilenetv2_100
+  pretrained: true
+  fpn_channels: 256
+  head_channels: 128
+  td_blocks: true
+  norm: instance
+
+discriminator:
+  kind: double_gan
+  num_layers: 3
+
+losses:
+  content: perceptual
+  adversarial: ragan-ls
+  adv_lambda: 0.001
+
+optimizer:
+  name: adam
+  lr: 0.0001
+
+scheduler:
+  name: linear
+  start_epoch: 100
+  min_lr: 0.0000001
+
+training:
+  epochs: 200
+  warmup_epochs: 3
+  batches_per_epoch: 1000
+  device: auto
+  amp: false
+  output_dir: runs

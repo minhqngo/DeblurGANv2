@@ -1,5 +1,20 @@
 .idea
+.vscode
+__pycache__/
 *.pyc
-#fpn_inception.h5
-#fpn_mobilenet.h5
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# environments
+.venv/
+venv/
+
+# training artifacts
+runs/
+output/
+*.pt
 *.h5
+
+# data
+data/
